@@ -81,8 +81,8 @@ while True:
         X = np.frombuffer(data_raw, dtype=np.float32).reshape(-1, 1, 28, 28)
         y = np.frombuffer(label_raw, dtype=np.uint8)
 
-        x = torch.from_numpy(X).float().to(device).contiguous()
-        y = torch.from_numpy(y).long().to(device)
+        x = torch.from_numpy(X.copy()).float().to(device).contiguous()
+        y = torch.from_numpy(y.copy()).long().to(device)
 
         optimizer.zero_grad()
         out = model(x)
