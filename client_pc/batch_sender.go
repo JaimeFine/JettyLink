@@ -22,7 +22,7 @@ const (
 	BatchSize = 2
 )
 
-func readUint32BE(r op.Reader) uint32 {
+func readUint32BE(r io.Reader) uint32 {
 	var v uint32
 	binary.Read(r, binary.BigEndian, &v)
 	return v
@@ -70,10 +70,10 @@ func loadMNISTLabels(path string) []byte {
 }
 
 func main() {
-	images := loadMNISTImages("train-images-idx3-ubyte")
-	labels := loadMNISTLabels("train-labels-idx1-ubyte")
+	images := loadMNISTImages("train-images.idx3-ubyte")
+	labels := loadMNISTLabels("train-labels.idx1-ubyte")
 
-	conn, err := net.Dial("tcp", "JETSON_IP:9000")
+	conn, err := net.Dial("tcp", "10.1.1.2:9000")
 	if err != nil {
 		panic(err)
 	}
@@ -88,7 +88,7 @@ func main() {
 	batchIdx := uint32(0)
 	
 	for i := 0; i + BatchSize <= len(images); i += BatchSize {
-		dataBytes := make([]byte, 2 * 1 * 28 * 28 * 4)
+		dataBytes := make([]byte, BatchSize * 1 * 28 * 28 * 4)
 		off := 0
 
 		for b:= 0; b < BatchSize; b++ {
@@ -118,8 +118,22 @@ func main() {
 		conn.Write(buf.Bytes())
 
 		reply := make([]byte, 256)
-		n, _ := conn.Read(reply)
-		fmt.Print(string(reply[:n]))
+		var total string
+
+		for {
+			n, err := conn.Read(reply)
+			if err != nil {
+				fmt.Println("Error reading reply:", err)
+				break
+			}
+
+			total += string(reply[:n])
+
+			if strings.Contains(total, "OK") {
+				fmt.Print(total)
+				break
+			}
+		}
 
 		batchIdx++
 	}

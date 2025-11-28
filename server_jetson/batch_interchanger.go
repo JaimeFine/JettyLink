@@ -24,10 +24,12 @@ func main() {
 
 	py.Start()
 
+	/*
 	go func() {
 		// To PC:
 		io.Copy(conn, pyOut)
 	} ()
+	*/
 
 	// To Receive:
 	for {
@@ -54,6 +56,13 @@ func main() {
 		pyIn.Write(header)
 		pyIn.Write(data)
 		pyIn.Write(labels)
+
+		// Read python's response:
+		reply := make([]byte, 256)
+		n, _ := pyOut.Read(reply)
+		fmt.Print(string(reply[:n]))
+
+		conn.Write([]byte("OK"))
 	}
 
 	pyIn.Close()

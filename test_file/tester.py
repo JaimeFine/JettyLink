@@ -65,3 +65,6 @@ while True:
     acc = (output.argmax(dim=1) == y).float().mean().item()
 
     print(f"batch {batch_idx} | loss={loss.item():.4f} | acc={acc*100:.1f}%", flush=True)
+
+    del x, y, output, loss
+    torch.cuda.empty_cache()
