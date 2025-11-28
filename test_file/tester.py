@@ -34,48 +34,38 @@ model = Net().to(device)
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 loss_fn = nn.CrossEntropyLoss()
 
-def read_exact(n):
-    buf = b""
-    while len(buf) < n:
-        chunk = sys.stdin.buffer.read(n - len(buf))
-        if not chunk:
-            return None
-        buf += chunk
-    return buf
-
 while True:
-    header = read_exact(32)
-    if not header:
+    header = sys.stdin.buffer.read(32)
+    if len(header) == 0:
         break
 
-    magic, batch_idx, dtype, data_len, label_len = struct.unpack("<4sIIQQ", header)
-
-    if magic != b"BTS0":
-        print("Bad header!", flush=True)
+    if header[:4] != b"BTS0":
+        print("bad magic", flush=True)
         break
 
-    data_raw = read_exact(data_len)
-    label_raw = read_exact(label_len)
+    batch_idx = int.from_bytes(header[4:8], "little")
+    # dtype     = int.from_bytes(header[8:12], "little")
+    data_len  = int.from_bytes(header[16:24], "little")
+    label_len = int.from_bytes(header[24:32], "little")
 
-    X_np = np.frombuffer(data_raw, dtype=np.float32).reshape(-1, 1, 28, 28)
-    y_np = np.frombuffer(label_raw, dtype=np.uint8)
+    data_raw = sys.stdin.buffer.read(data_len)
+    label_raw = sys.stdin.buffer.read(label_len)
 
-    x = torch.tensor(X_np, device=device)
-    y = torch.tensor(y_np, dtype=torch.long, device=device)
+    X = np.frombuffer(data_raw, dtype=np.float32).reshape(-1, 1, 28, 28)
+    y = np.frombuffer(label_raw, dtype=np.uint8)
 
-    del X_np, y_np
-    gc.collect()
+    x = torch.tensor(X, device=device)
+    y = torch.tensor(y, dtype=torch.long, device=device)
 
     optimizer.zero_grad()
-    output = model(x)
-    loss = loss_fn(output, y)
+    out = model(x)
+    loss = loss_fn(out, y)
     loss.backward()
     optimizer.step()
 
-    acc = (output.argmax(dim=1) == y).float().mean().item()
+    acc = (out.argmax(dim=1) == y).float().mean().item()
+    print(f"batch {batch_idx:4d} | loss={loss.item():.4f} | acc={acc*100:5.1f}%", flush=True)
 
-    print(f"batch {batch_idx} | loss={loss.item():.4f} | acc={acc*100:.1f}%", flush=True)
-
-    del x, y, output, loss
+    del x, y, out, loss, X
     torch.cuda.empty_cache()
     gc.collect()
