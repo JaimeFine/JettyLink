@@ -7,7 +7,7 @@ import numpy as np
 import gc
 import traceback
 
-device = "cpu"
+device = "cuda"
 
 print("Trainer started - initializing model...", flush=True)
 sys.stderr.write("DEBUG: Trainer started\n")
@@ -81,14 +81,15 @@ while True:
         X = np.frombuffer(data_raw, dtype=np.float32).reshape(-1, 1, 28, 28)
         y = np.frombuffer(label_raw, dtype=np.uint8)
 
-        x = torch.tensor(X, device=device)
-        y = torch.tensor(y, dtype=torch.long, device=device)
+        x = torch.from_numpy(X).float().to(device).contiguous()
+        y = torch.from_numpy(y).long().to(device)
 
         optimizer.zero_grad()
         out = model(x)
         loss = loss_fn(out, y)
         loss.backward()
         optimizer.step()
+        torch.cuda.synchronize()
 
         acc = (out.argmax(dim=1) == y).float().mean().item()
         print(f"batch {batch_idx:4d} | loss={loss.item():.4f} | acc={acc*100:5.1f}%", flush=True)

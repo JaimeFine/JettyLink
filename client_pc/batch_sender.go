@@ -10,7 +10,7 @@ import (
     "strings"
 )
 
-const BatchSize = 8
+const BatchSize = 16
 
 func writeHeader(w io.Writer, batchIdx uint32, dataLen, labelLen uint64) error {
     var buf [32]byte
