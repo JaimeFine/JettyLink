@@ -10,7 +10,7 @@ import (
     "strings"
 )
 
-const BatchSize = 8
+const BatchSize = 8     // Recommended for 4GB RAM
 
 func writeHeader(w io.Writer, batchIdx uint32, dataLen, labelLen uint64) error {
     var buf [32]byte
@@ -75,6 +75,7 @@ func loadMNISTLabels(path string) []byte {
 }
 
 func main() {
+    // Datasets:
     images := loadMNISTImages("train-images.idx3-ubyte")
     labels := loadMNISTLabels("train-labels.idx1-ubyte")
 
