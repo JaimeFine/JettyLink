@@ -125,5 +125,5 @@ func main() {
 
         batchIdx++
     }
-    fmt.Println("Training finished – all batches sent!")
+    fmt.Println("Training finished - all batches sent!")
 }

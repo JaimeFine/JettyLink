@@ -5,6 +5,7 @@ import (
     "fmt"
     "io"
     "net"
+    "os"
     "os/exec"
 )
 
@@ -31,14 +32,16 @@ func main() {
     py := exec.Command("python3", "trainer.py")
     pyIn, _ := py.StdinPipe()
     pyOut, _ := py.StdoutPipe()
+    pyErr, _ := py.StderrPipe()
     if err := py.Start(); err != nil {
         panic(err)
     }
     defer py.Wait()
 
-    go io.Copy(conn, pyOut)
+    go io.Copy(os.Stdout, pyErr)
 
     headerBuf := make([]byte, 32)
+    replyBuf := make([]byte, 2048)
 
     for {
         _, err := io.ReadFull(conn, headerBuf)
@@ -68,10 +71,21 @@ func main() {
         io.ReadFull(conn, data)
         io.ReadFull(conn, label)
 
-        // Forward to Python
         pyIn.Write(headerBuf)
         pyIn.Write(data)
         pyIn.Write(label)
+
+        for {
+            n, err := pyOut.Read(replyBuf)
+            if err != nil && err != io.EOF {
+                fmt.Println("error reading Python output:", err)
+                break
+            }
+            if n == 0 {
+                break
+            }
+            conn.Write(replyBuf[:n])
+        }
 
         conn.Write([]byte("OK"))
     }
