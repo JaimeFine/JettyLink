@@ -55,11 +55,11 @@ conn, err := net.Dial("tcp", "JETSON_IP:9000")
 ```bash
 go run batch_sender.go
 ```
-
+s
 ### 2. On the Jetson
 
 1. Ensure Python environment has required packages:
-**Be aware of the compatibility, this is the trickiest part! Do not trust AI on that, you'll thank me!**
+**Be aware of the compatibility, this is the trickiest part! Do not trust AI on that, you'll thank me later!**
 ```bash
 python3 -m venv venv
 source venv/bin/activate
@@ -99,3 +99,9 @@ go run batch_interchanger.go
 * Use this setup as a template for **remote batch training**, **embedded AI experiments**, or **custom TCP-based ML pipelines**.
 * Modify the model in `tester.py` or dataset loading in `batch_sender.go` for your own tasks.
 * The code demonstrates **interoperability between Go and Python** for high-performance ML workflows.
+
+---
+
+> **Note:**
+> There are also three tiny program called infer.py, server.go, and client.go, which I used for checking the connectivity before everything.
+> You can ignore it...
