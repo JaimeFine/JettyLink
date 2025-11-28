@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
+import gc
 
 device = "cuda"
 
@@ -34,7 +35,13 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 loss_fn = nn.CrossEntropyLoss()
 
 def read_exact(n):
-    return sys.stdin.buffer.read(n)
+    buf = b""
+    while len(buf) < n:
+        chunk = sys.stdin.buffer.read(n - len(buf))
+        if not chunk:
+            return None
+        buf += chunk
+    return buf
 
 while True:
     header = read_exact(32)
@@ -50,14 +57,17 @@ while True:
     data_raw = read_exact(data_len)
     label_raw = read_exact(label_len)
 
-    X = np.frombuffer(data_raw, dtype=np.float32).reshape(2, 1, 28, 28)
-    y = np.frombuffer(label_raw, dtype=np.uint8)
+    X_np = np.frombuffer(data_raw, dtype=np.float32).reshape(-1, 1, 28, 28)
+    y_np = np.frombuffer(label_raw, dtype=np.uint8)
 
-    x = torch.tensor(X, device=device)
-    y = torch.tensor(y, dtype=torch.long, device=device)
+    x = torch.tensor(X_np, device=device)
+    y = torch.tensor(y_np, dtype=torch.long, device=device)
+
+    del X_np, y_np
+    gc.collect()
 
     optimizer.zero_grad()
-    output = model(X)
+    output = model(x)
     loss = loss_fn(output, y)
     loss.backward()
     optimizer.step()
@@ -68,3 +78,4 @@ while True:
 
     del x, y, output, loss
     torch.cuda.empty_cache()
+    gc.collect()

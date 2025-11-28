@@ -8,6 +8,7 @@ import (
 	"os"
 	"math"
 	"io"
+	"strings"
 )
 
 type Header struct {
@@ -20,7 +21,12 @@ type Header struct {
 
 const (
 	BatchSize = 2
+	MaxBatchSize = 128
 )
+
+if BatchSize > MaxBatchSize {
+    panic("batch size too big")
+}
 
 func readUint32BE(r io.Reader) uint32 {
 	var v uint32
