@@ -1,6 +1,6 @@
 # JettyLink
 
->>> **NOTE**: *This project is currently developing as my main project, please swait for better functionality!*
+> **NOTE**: *This is the initial version of the project, more feature and newer version please check main branch!*
 
 This repository demonstrates an example of Jetson connection with PC: **custom TCP-based batch sender and trainer pipeline** for PyTorch, using Go as the client and server, and Python for model training on a Jetson device. It is useful for **streaming data to an embedded device for on-device deep learning training** and can serve as a reference for similar setups.
 
